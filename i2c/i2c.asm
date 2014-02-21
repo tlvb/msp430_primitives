@@ -1,22 +1,11 @@
 .include "msp430g2x31.inc"
 ; vim: set syntax=msp:
 
-dly_dit equ 0x4fff
-dly_dah equ 0xeffd
-
 usout equ P1OUT
 usdir equ P1DIR
 ustxp equ 0x40
 usbitdly equ 0x65
 
-
-
-
-org 0xfffe
-interrupt_table:																; {{{
-; --------------------------------------------------------------------------------------------------------------------------------
-						dw			MAIN_ENTRY_POINT							; set reset vector to point to the MAIN_ENTRY_POINT label
-; }}}
 org 0xf800
 
 configure_i2c_master:															; {{{
@@ -32,8 +21,6 @@ transmit_byte_get_ack:															; {{{
 ;						ARG:		r4: ack aggregate so far
 ;						RET:		r4: r4 shifted left | last ack value
 ; --------------------------------------------------------------------------------------------------------------------------------
-						bis.b		#0x02, &P1OUT
-
 						bis.b		#USIOE, &USICTL0							; enable output
 						mov.b		#0x08, &USICNT								; send 8 bits
 transmit_byte_wait0:	bit.b		#USIIFG, &USICTL1							; check if flag is set
@@ -48,7 +35,6 @@ transmit_byte_wait1:	bit.b		#USIIFG, &USICTL1							; check if flag is set
 						add.w		r4, r4										; shift r4 to left
 						bis.b		&USISRL, r4
 
-						bic.b		#0x02, &P1OUT
 						ret
 ; }}}
 receive_byte_set_ack:	; and receive_byte_set_nack:												; {{{
@@ -62,7 +48,6 @@ receive_byte_set_nack:
 						push		r6
 						mov.b		#0xff, r6
 receive_byte_set_acknack:
-						bis.b		#0x02, &P1OUT
 
 						bic.b		#USIOE, &USICTL0							; disable output
 						mov.b		#0x08, &USICNT								; receive eight bits
@@ -76,7 +61,6 @@ receive_one_byte_wait0:	bit.b		#USIIFG, &USICTL1							; check if flag is set
 receive_one_byte_wait1:	bit.b		#USIIFG, &USICTL1							; check if flag is set
 						jz			receive_one_byte_wait1						; loop if not
 
-						bic.b		#0x02, &P1OUT
 						pop			r6
 						ret
 ; }}}
